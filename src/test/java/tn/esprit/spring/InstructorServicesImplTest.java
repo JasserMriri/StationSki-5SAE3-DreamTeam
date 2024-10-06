@@ -5,13 +5,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import tn.esprit.spring.entities.Course;
 import tn.esprit.spring.entities.Instructor;
+import tn.esprit.spring.entities.TypeCourse;
+import tn.esprit.spring.repositories.ICourseRepository;
 import tn.esprit.spring.repositories.IInstructorRepository;
 import tn.esprit.spring.services.InstructorServicesImpl;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -21,18 +22,29 @@ class InstructorServicesImplTest {
     @Mock
     private IInstructorRepository instructorRepository;
 
+    @Mock
+    private ICourseRepository courseRepository;
+
     @InjectMocks
     private InstructorServicesImpl instructorServices;
 
     private Instructor instructor;
+    private Course course;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        // Initialize Instructor object
         instructor = new Instructor();
         instructor.setNumInstructor(1L);
         instructor.setFirstName("John");
         instructor.setLastName("Doe");
+
+        // Initialize Course object
+        course = new Course();
+        course.setNumCourse(1L);
+        course.setTypeCourse(TypeCourse.COLLECTIVE_ADULT); // Use the enum value here
     }
 
     @Test
@@ -80,5 +92,22 @@ class InstructorServicesImplTest {
         assertEquals(instructor.getFirstName(), foundInstructor.getFirstName());
         assertEquals(instructor.getLastName(), foundInstructor.getLastName());
         verify(instructorRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void testAddInstructorAndAssignToCourse() {
+        // Mock behavior for CourseRepository
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+        when(instructorRepository.save(any(Instructor.class))).thenReturn(instructor);
+
+        Instructor result = instructorServices.addInstructorAndAssignToCourse(instructor, 1L);
+
+        assertNotNull(result);
+        assertTrue(result.getCourses().contains(course));
+        assertEquals(1, result.getCourses().size());
+
+        // Verify interactions
+        verify(courseRepository, times(1)).findById(1L);
+        verify(instructorRepository, times(1)).save(instructor);
     }
 }

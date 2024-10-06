@@ -1,60 +1,112 @@
 package tn.esprit.spring;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.test.web.servlet.MockMvc;
+import tn.esprit.spring.controllers.InstructorRestController;
 import tn.esprit.spring.entities.Instructor;
 import tn.esprit.spring.services.IInstructorServices;
 
+import java.util.Arrays;
 import java.util.List;
 
-@Tag(name = "👩‍🏫 Instructor Management")
-@RestController
-@RequestMapping("/instructor")
-@RequiredArgsConstructor
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
+
 public class InstructorControllerTest {
 
-    private final IInstructorServices instructorServices;
+    @Mock
+    private IInstructorServices instructorServices;
 
-    @Operation(description = "Add Instructor")
-    @PostMapping("/add")
-    public ResponseEntity<Instructor> addInstructor(@RequestBody Instructor instructor) {
-        Instructor savedInstructor = instructorServices.addInstructor(instructor);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedInstructor);
+    @InjectMocks
+    private InstructorRestController instructorRestController;
+
+    private MockMvc mockMvc;
+
+    private Instructor instructor;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+        mockMvc = standaloneSetup(instructorRestController).build();
+
+        // Initialisation d'un instructeur de test
+        instructor = new Instructor();
+        instructor.setNumInstructor(1L);
+        instructor.setFirstName("John");
+        instructor.setLastName("Doe");
     }
 
-    @Operation(description = "Add Instructor and Assign To Course")
-    @PutMapping("/addAndAssignToCourse/{numCourse}")
-    public ResponseEntity<Instructor> addAndAssignToCourse(@RequestBody Instructor instructor, @PathVariable("numCourse") Long numCourse) {
-        Instructor assignedInstructor = instructorServices.addInstructorAndAssignToCourse(instructor, numCourse);
-        return ResponseEntity.ok(assignedInstructor);
+    @Test
+    public void testAddInstructor() throws Exception {
+        when(instructorServices.addInstructor(any(Instructor.class))).thenReturn(instructor);
+
+        mockMvc.perform(post("/instructor/add")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\":\"John\",\"lastName\":\"Doe\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"numInstructor\":1,\"firstName\":\"John\",\"lastName\":\"Doe\"}"));
+
+        verify(instructorServices, times(1)).addInstructor(any(Instructor.class));
     }
 
-    @Operation(description = "Retrieve all Instructors")
-    @GetMapping("/all")
-    public ResponseEntity<List<Instructor>> getAllInstructors() {
-        List<Instructor> instructors = instructorServices.retrieveAllInstructors();
-        return ResponseEntity.ok(instructors);
+    @Test
+    public void testAddAndAssignToInstructor() throws Exception {
+        when(instructorServices.addInstructorAndAssignToCourse(any(Instructor.class), eq(1L))).thenReturn(instructor);
+
+        mockMvc.perform(put("/instructor/addAndAssignToCourse/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"numInstructor\":1,\"firstName\":\"John\",\"lastName\":\"Doe\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"numInstructor\":1,\"firstName\":\"John\",\"lastName\":\"Doe\"}"));
+
+        verify(instructorServices, times(1)).addInstructorAndAssignToCourse(any(Instructor.class), eq(1L));
     }
 
-    @Operation(description = "Update Instructor")
-    @PutMapping("/update")
-    public ResponseEntity<Instructor> updateInstructor(@RequestBody Instructor instructor) {
-        Instructor updatedInstructor = instructorServices.updateInstructor(instructor);
-        return ResponseEntity.ok(updatedInstructor);
+    @Test
+    public void testGetAllInstructors() throws Exception {
+        List<Instructor> instructors = Arrays.asList(instructor);
+
+        when(instructorServices.retrieveAllInstructors()).thenReturn(instructors);
+
+        mockMvc.perform(get("/instructor/all"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[{\"numInstructor\":1,\"firstName\":\"John\",\"lastName\":\"Doe\"}]"));
+
+        verify(instructorServices, times(1)).retrieveAllInstructors();
     }
 
-    @Operation(description = "Retrieve Instructor by Id")
-    @GetMapping("/get/{id-instructor}")
-    public ResponseEntity<Instructor> getById(@PathVariable("id-instructor") Long numInstructor) {
-        Instructor instructor = instructorServices.retrieveInstructor(numInstructor);
-        if (instructor != null) {
-            return ResponseEntity.ok(instructor);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+    @Test
+    public void testUpdateInstructor() throws Exception {
+        when(instructorServices.updateInstructor(any(Instructor.class))).thenReturn(instructor);
+
+        mockMvc.perform(put("/instructor/update")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"numInstructor\":1,\"firstName\":\"John\",\"lastName\":\"Doe\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"numInstructor\":1,\"firstName\":\"John\",\"lastName\":\"Doe\"}"));
+
+        verify(instructorServices, times(1)).updateInstructor(any(Instructor.class));
+    }
+
+    @Test
+    public void testAssignInstructorToCourse() throws Exception {
+        when(instructorServices.retrieveInstructor(1L)).thenReturn(instructor);
+        when(instructorServices.addInstructorAndAssignToCourse(any(Instructor.class), eq(1L))).thenReturn(instructor);
+
+        mockMvc.perform(post("/instructor/1/assign/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"numInstructor\":1,\"firstName\":\"John\",\"lastName\":\"Doe\"}"));
+
+        verify(instructorServices, times(1)).addInstructorAndAssignToCourse(any(Instructor.class), eq(1L));
     }
 }
