@@ -10,14 +10,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tn.esprit.spring.entities.Course;
+import tn.esprit.spring.entities.Registration;
 import tn.esprit.spring.entities.Support;
 import tn.esprit.spring.entities.TypeCourse;
 import tn.esprit.spring.repositories.ICourseRepository;
+import tn.esprit.spring.repositories.IRegistrationRepository;
 import tn.esprit.spring.services.CourseServicesImpl;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @ExtendWith(MockitoExtension.class)
 public class CourseServicesImplTest {
@@ -25,13 +26,49 @@ public class CourseServicesImplTest {
     @Mock
     private ICourseRepository courseRepository;
 
+    @Mock
+    private IRegistrationRepository registrationRepository;
+
     @InjectMocks
     private CourseServicesImpl courseService;
 
+    private Course course;
+    private Registration registration;
+    private Date startDate;
+    private Date endDate;
+
     @BeforeEach
     public void setup() {
-        // Configuration préalable, si nécessaire
+        // Initialize Course object
+        course = new Course();
+        course.setNumCourse(1L);
+        course.setLevel(1);
+        course.setTypeCourse(TypeCourse.COLLECTIVE_ADULT);
+        course.setSupport(Support.SKI);
+        course.setPrice(100.0f);
+        course.setTimeSlot(2);
+
+        // Initialize Registration object
+        registration = new Registration();
+        registration.setNumRegistration(1L);
+
+        // Initialize date range for financial analysis (aligned dates)
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        cal.add(Calendar.DATE, -30); // Set startDate to 30 days ago
+        startDate = cal.getTime();
+
+        cal.add(Calendar.DATE, 15); // Move 15 days ahead from startDate
+        registration.setRegistrationDate(cal.getTime());
+
+        // Set endDate
+        cal.add(Calendar.DATE, 15); // Current date, 15 days after registration
+        endDate = cal.getTime();
     }
+
 
     @Test
     public void testRetrieveAllCourses() {
@@ -66,13 +103,6 @@ public class CourseServicesImplTest {
     @Test
     public void testAddCourse() {
         // Given
-        Course course = new Course();
-        course.setLevel(1);
-        course.setTypeCourse(TypeCourse.INDIVIDUAL);
-        course.setSupport(Support.SKI);
-        course.setPrice(100.0f);
-        course.setTimeSlot(2);
-
         when(courseRepository.save(course)).thenReturn(course);
 
         // When
@@ -85,14 +115,7 @@ public class CourseServicesImplTest {
     @Test
     public void testUpdateCourse() {
         // Given
-        Course course = new Course();
-        course.setNumCourse(1L);
-        course.setLevel(1);
-        course.setTypeCourse(TypeCourse.COLLECTIVE_ADULT);
-        course.setSupport(Support.SKI);
         course.setPrice(120.0f); // updated price
-        course.setTimeSlot(2);
-
         when(courseRepository.save(course)).thenReturn(course);
 
         // When
@@ -106,14 +129,6 @@ public class CourseServicesImplTest {
     public void testRetrieveCourse() {
         // Given
         Long courseId = 1L;
-        Course course = new Course();
-        course.setNumCourse(courseId);
-        course.setLevel(1);
-        course.setTypeCourse(TypeCourse.COLLECTIVE_ADULT);
-        course.setSupport(Support.SKI);
-        course.setPrice(100.0f);
-        course.setTimeSlot(2);
-
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
 
         // When
@@ -123,5 +138,117 @@ public class CourseServicesImplTest {
         assertEquals(course, result);
     }
 
+    @Test
+    public void testAddCourseAndAssignToRegistration() {
+        // Given
+        when(registrationRepository.findById(1L)).thenReturn(Optional.of(registration));
+        when(courseRepository.save(course)).thenReturn(course);
+
+        // When
+        Course result = courseService.addCourseAndAssignToregistre(course, 1L);
+
+        // Then
+        assertNotNull(result);
+        Set<Registration> registrations = result.getRegistrations();
+        assertNotNull(registrations);
+        assertTrue(registrations.contains(registration));
+        assertEquals(1, registrations.size());
+
+        // Verify interactions
+        verify(registrationRepository, times(1)).findById(1L);
+        verify(courseRepository, times(1)).save(course);
+    }
+
+    // === New Tests for Financial Analysis ===
+
+    @Test
+    public void testCalculateRevenuePerCourse() {
+        // Given
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        cal.add(Calendar.DATE, -10); // Set registration date 10 days ago, within the range
+        registration.setRegistrationDate(cal.getTime());
+
+        Set<Registration> registrations = new HashSet<>(Collections.singletonList(registration));
+        course.setRegistrations(registrations);
+
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+        // When
+        float revenue = courseService.calculateRevenuePerCourse(1L, startDate, endDate);
+
+        // Then
+        assertEquals(100.0f, revenue);  // Expecting revenue to be 100.0
+    }
+
+    @Test
+    public float calculateRevenueOverPeriod(Date startDate, Date endDate) {
+        List<Course> courses = courseRepository.findAll();
+        float totalRevenue = 0;
+        for (Course course : courses) {
+            for (Registration reg : course.getRegistrations()) {
+                // Include registrations on the start and end date by using equals checks
+                if (!reg.getRegistrationDate().before(startDate) && !reg.getRegistrationDate().after(endDate)) {
+                    totalRevenue += course.getPrice();
+                }
+            }
+        }
+        return totalRevenue;
+    }
+
+
+
+
+    @Test
+    public void testGetTotalRevenueAndRegistrations() {
+        // Given
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        cal.add(Calendar.DATE, -10); // Set registration date 10 days ago, within the range
+        registration.setRegistrationDate(cal.getTime());
+
+        course.setRegistrations(new HashSet<>(Collections.singletonList(registration)));
+        List<Course> courses = Arrays.asList(course);
+        when(courseRepository.findAll()).thenReturn(courses);
+
+        // When
+        Map<String, Object> result = courseService.getTotalRevenueAndRegistrations(startDate, endDate);
+
+        // Then
+        assertEquals(100.0f, result.get("totalRevenue")); // Expecting total revenue to be 100.0
+        assertEquals(1, result.get("totalRegistrations")); // Expecting 1 registration
+    }
+
+
+
+    @Test
+    public void testGetCoursePopularity() {
+        // Given
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        cal.add(Calendar.DATE, -10); // Set registration date 10 days ago, within the range
+        registration.setRegistrationDate(cal.getTime());
+
+        course.setRegistrations(new HashSet<>(Collections.singletonList(registration)));
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(course));
+
+        // When
+        int popularity = courseService.getCoursePopularity(1L, startDate, endDate);
+
+        // Then
+        assertEquals(1, popularity); // Expecting popularity count to be 1
+    }
 
 }

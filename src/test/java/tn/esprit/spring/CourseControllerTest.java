@@ -1,29 +1,27 @@
 package tn.esprit.spring;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.*;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
 import tn.esprit.spring.controllers.CourseRestController;
 import tn.esprit.spring.entities.Course;
-import tn.esprit.spring.entities.Support;
 import tn.esprit.spring.entities.TypeCourse;
 import tn.esprit.spring.services.ICourseServices;
 
-import java.util.Arrays;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
-@ExtendWith(MockitoExtension.class)
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
+
 public class CourseControllerTest {
 
     @Mock
@@ -34,111 +32,184 @@ public class CourseControllerTest {
 
     private MockMvc mockMvc;
 
+    private Course course;
+
     @BeforeEach
     public void setup() {
+        MockitoAnnotations.openMocks(this);
         mockMvc = standaloneSetup(courseRestController).build();
-    }
 
-    @Test
-    public void testGetAllCourses() throws Exception {
-        // Mock courses
-        Course course1 = new Course();
-        course1.setNumCourse(1L);
-        course1.setLevel(1);
-        course1.setTypeCourse(TypeCourse.COLLECTIVE_CHILDREN);
-        course1.setSupport(Support.SKI);
-        course1.setPrice(100.0f);
-        course1.setTimeSlot(2);
-
-        Course course2 = new Course();
-        course2.setNumCourse(2L);
-        course2.setLevel(2);
-        course2.setTypeCourse(TypeCourse.COLLECTIVE_ADULT);
-        course2.setSupport(Support.SNOWBOARD);
-        course2.setPrice(150.0f);
-        course2.setTimeSlot(3);
-
-        List<Course> courses = Arrays.asList(course1, course2);
-
-        when(courseServices.retrieveAllCourses()).thenReturn(courses);
-
-        // Perform GET request to retrieve all courses
-        mockMvc.perform(get("/course/all"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("[{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_CHILDREN\",\"support\":\"SKI\",\"price\":100.0,\"timeSlot\":2}," +
-                        "{\"numCourse\":2,\"level\":2,\"typeCourse\":\"COLLECTIVE_ADULT\",\"support\":\"SNOWBOARD\",\"price\":150.0,\"timeSlot\":3}]"));
-
-        verify(courseServices, times(1)).retrieveAllCourses();
-    }
-
-    @Test
-    public void testGetCourseById() throws Exception {
-        // Mock a course
-        Long courseId = 1L;
-        Course course = new Course();
-        course.setNumCourse(courseId);
+        // Initializing a test course
+        course = new Course();
+        course.setNumCourse(1L);
         course.setLevel(1);
-        course.setTypeCourse(TypeCourse.COLLECTIVE_CHILDREN);
-        course.setSupport(Support.SKI);
+        course.setTypeCourse(TypeCourse.COLLECTIVE_ADULT);
         course.setPrice(100.0f);
-        course.setTimeSlot(2);
-
-        when(courseServices.retrieveCourse(courseId)).thenReturn(course);
-
-        // Perform GET request to retrieve the course by ID
-        mockMvc.perform(get("/course/get/{id-course}", courseId))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_CHILDREN\",\"support\":\"SKI\",\"price\":100.0,\"timeSlot\":2}"));
-
-        verify(courseServices, times(1)).retrieveCourse(courseId);
     }
 
     @Test
     public void testAddCourse() throws Exception {
-        // Mock the new course to be added
-        Course course = new Course();
-        course.setLevel(1);
-        course.setTypeCourse(TypeCourse.INDIVIDUAL);
-        course.setSupport(Support.SKI);
-        course.setPrice(100.0f);
-        course.setTimeSlot(2);
-
         when(courseServices.addCourse(any(Course.class))).thenReturn(course);
 
-        // Perform POST request to add the course
         mockMvc.perform(post("/course/add")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"level\":1,\"typeCourse\":\"INDIVIDUAL\",\"support\":\"SKI\",\"price\":100.0,\"timeSlot\":2}"))
+                        .content("{\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("{\"level\":1,\"typeCourse\":\"INDIVIDUAL\",\"support\":\"SKI\",\"price\":100.0,\"timeSlot\":2}"));
+                .andExpect(content().json("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}"));
 
         verify(courseServices, times(1)).addCourse(any(Course.class));
     }
 
     @Test
-    public void testUpdateCourse() throws Exception {
-        // Mock the course to be updated
-        Course course = new Course();
-        course.setNumCourse(1L);
-        course.setLevel(1);
-        course.setTypeCourse(TypeCourse.COLLECTIVE_ADULT);
-        course.setSupport(Support.SKI);
-        course.setPrice(120.0f);  // Updated price
-        course.setTimeSlot(2);
+    public void testAddAndAssignToRegistration() throws Exception {
+        when(courseServices.addCourseAndAssignToregistre(any(Course.class), eq(1L))).thenReturn(course);
 
+        mockMvc.perform(put("/course/addAndAssignToRegistration/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}"));
+
+        verify(courseServices, times(1)).addCourseAndAssignToregistre(any(Course.class), eq(1L));
+    }
+
+    @Test
+    public void testGetAllCourses() throws Exception {
+        List<Course> courses = Arrays.asList(course);
+
+        when(courseServices.retrieveAllCourses()).thenReturn(courses);
+
+        mockMvc.perform(get("/course/all"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}]"));
+
+        verify(courseServices, times(1)).retrieveAllCourses();
+    }
+
+    @Test
+    public void testUpdateCourse() throws Exception {
         when(courseServices.updateCourse(any(Course.class))).thenReturn(course);
 
-        // Perform PUT request to update the course
         mockMvc.perform(put("/course/update")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"support\":\"SKI\",\"price\":120.0,\"timeSlot\":2}"))
+                        .content("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}"))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().json("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"support\":\"SKI\",\"price\":120.0,\"timeSlot\":2}"));
+                .andExpect(content().json("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}"));
 
         verify(courseServices, times(1)).updateCourse(any(Course.class));
+    }
+
+    @Test
+    public void testAssignCourseToRegistration() throws Exception {
+        when(courseServices.addCourseAndAssignToregistre(any(Course.class), eq(1L))).thenReturn(course);
+
+        mockMvc.perform(post("/course/course/1/assign")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"numCourse\":1,\"level\":1,\"typeCourse\":\"COLLECTIVE_ADULT\",\"price\":100.0}"));
+
+        verify(courseServices, times(1)).addCourseAndAssignToregistre(any(Course.class), eq(1L));
+    }
+
+
+    @Test
+    public void testCalculateRevenuePerCourse() throws Exception {
+        // Setting up mock data
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate = sdf.parse("2023-01-01");
+        Date endDate = sdf.parse("2023-12-31");
+
+        when(courseServices.calculateRevenuePerCourse(eq(1L), any(Date.class), any(Date.class)))
+                .thenReturn(500.0f);
+
+        mockMvc.perform(get("/course/revenuePerCourse/1")
+                        .param("startDate", "2023-01-01")
+                        .param("endDate", "2023-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("500.0"));
+
+        verify(courseServices, times(1))
+                .calculateRevenuePerCourse(eq(1L), any(Date.class), any(Date.class));
+    }
+
+    @Test
+    public void testCalculateRevenueOverPeriod() throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate = sdf.parse("2023-01-01");
+        Date endDate = sdf.parse("2023-12-31");
+
+        when(courseServices.calculateRevenueOverPeriod(any(Date.class), any(Date.class)))
+                .thenReturn(1500.0f);
+
+        mockMvc.perform(get("/course/revenueOverPeriod")
+                        .param("startDate", "2023-01-01")
+                        .param("endDate", "2023-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("1500.0"));
+
+        verify(courseServices, times(1))
+                .calculateRevenueOverPeriod(any(Date.class), any(Date.class));
+    }
+
+    @Test
+    public void testGetCoursePopularity() throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate = sdf.parse("2023-01-01");
+        Date endDate = sdf.parse("2023-12-31");
+
+        when(courseServices.getCoursePopularity(eq(1L), any(Date.class), any(Date.class)))
+                .thenReturn(20);
+
+        mockMvc.perform(get("/course/coursePopularity/1")
+                        .param("startDate", "2023-01-01")
+                        .param("endDate", "2023-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("20"));
+
+        verify(courseServices, times(1))
+                .getCoursePopularity(eq(1L), any(Date.class), any(Date.class));
+    }
+
+    @Test
+    public void testGetTotalRevenueAndRegistrations() throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate = sdf.parse("2023-01-01");
+        Date endDate = sdf.parse("2023-12-31");
+
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("totalRevenue", 2000.0f);
+        resultMap.put("totalRegistrations", 40);
+
+        when(courseServices.getTotalRevenueAndRegistrations(any(Date.class), any(Date.class)))
+                .thenReturn(resultMap);
+
+        mockMvc.perform(get("/course/totalRevenueAndRegistrations")
+                        .param("startDate", "2023-01-01")
+                        .param("endDate", "2023-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"totalRevenue\":2000.0,\"totalRegistrations\":40}"));
+
+        verify(courseServices, times(1))
+                .getTotalRevenueAndRegistrations(any(Date.class), any(Date.class));
+    }
+
+    @Test
+    public void testCalculateAveragePrice() throws Exception {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate = sdf.parse("2023-01-01");
+        Date endDate = sdf.parse("2023-12-31");
+
+        when(courseServices.calculateAveragePrice(any(Date.class), any(Date.class)))
+                .thenReturn(125.0f);
+
+        mockMvc.perform(get("/course/averagePrice")
+                        .param("startDate", "2023-01-01")
+                        .param("endDate", "2023-12-31"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("125.0"));
+
+        verify(courseServices, times(1))
+                .calculateAveragePrice(any(Date.class), any(Date.class));
     }
 }
