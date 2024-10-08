@@ -74,7 +74,7 @@ public class SkierServicesImpl implements ISkierServices {
     @Override
     public Skier retrieveSkier(Long numSkier) {
         return skierRepository.findById(numSkier).orElse(null);
-    }
+    }//hedhi mazlt
 
     @Override
     public Skier assignSkierToPiste(Long numSkieur, Long numPiste) {
@@ -89,7 +89,7 @@ public class SkierServicesImpl implements ISkierServices {
         }
 
         return skierRepository.save(skier);
-    }
+    }//hedhi mazlt
 
     @Override
     public List<Skier> retrieveSkiersBySubscriptionType(TypeSubscription typeSubscription) {
