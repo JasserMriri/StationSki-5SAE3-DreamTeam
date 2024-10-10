@@ -194,7 +194,9 @@ public class SkierControllerTest {
         verify(skierServices, times(1)).retrieveSkiersBySubscriptionType(TypeSubscription.ANNUAL);
     }*/
 
-    /*@Test
+    /*
+
+    @Test
     @DisplayName("Test Delete Skier by Id")
     public void testDeleteSkierById() throws Exception {
         // Given
