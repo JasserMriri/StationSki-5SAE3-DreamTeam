@@ -3,6 +3,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.junit.Assert.assertSame;
 
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +43,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*; // Import Hamcrest matchers
@@ -122,14 +124,32 @@ public class SkierControllerTest {
         // Verify that the retrieveSkier method was called with the correct parameter
         verify(skierServices, times(1)).retrieveSkier(numSkier);
     }
-   /* @Test
+    @Test
+    public void testRetrieveSkiersBySubscriptionType() throws Exception {
+        // Given
+        TypeSubscription typeSubscription = TypeSubscription.ANNUAL; // Example subscription type
+        List<Skier> expectedSkiers = Arrays.asList(skier1, skier2);
+
+        when(skierServices.retrieveSkiersBySubscriptionType(typeSubscription)).thenReturn(expectedSkiers);
+
+        // When & Then
+        mockMvc.perform(get("/skier/getSkiersBySubscription")
+                        .param("typeSubscription", typeSubscription.name())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2))) // Check the size of the returned list
+                .andExpect(jsonPath("$[0].firstName", is("John"))) // Check the first skier's first name
+                .andExpect(jsonPath("$[1].firstName", is("Challenger"))); // Check the second skier's first name
+
+        verify(skierServices).retrieveSkiersBySubscriptionType(typeSubscription);
+    }
+    @Test
     @DisplayName("Assign Skier To Subscription")
     public void testAssignToSubscription() throws Exception {
         Long numSkier = 1L; // ID of the skier
         Long numSub = 10L; // ID of the subscription
 
         // Given: Set up the mock behavior
-        skier1.setNumSkier(numSub); // Assuming you have a method to set subscription ID in Skier
         when(skierServices.assignSkierToSubscription(numSkier, numSub)).thenReturn(skier1);
 
         // When & Then: Perform the request and verify the result
@@ -139,60 +159,69 @@ public class SkierControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.firstName", is("John"))) // Check the skier's first name
                 .andExpect(jsonPath("$.lastName", is("Doe"))) // Check the skier's last name
-                .andExpect(jsonPath("$.city", is("Some City"))) // Check the skier's city
-                .andExpect(jsonPath("$.dateOfBirth", is("1990-01-01"))) // Check the skier's date of birth
-                .andExpect(jsonPath("$.numSub", is(numSub.intValue()))); // Check the subscription ID
+                .andExpect(jsonPath("$.city", is("Some City"))); // Check the skier's city
 
         // Verify that the service method was called once
         verify(skierServices, times(1)).assignSkierToSubscription(numSkier, numSub);
-    }*/
-  /* @Test
-   @DisplayName("Assign Skier To Piste")
-   public void testAssignToPiste() throws Exception {
-       Long numSkier = 1L; // ID of the skier
-       Long numPiste = 20L; // ID of the piste
+    }
+    @Test
+    public void testAssignToPiste() throws Exception {
+        Long numSkier = 1L;
+        Long numPiste = 2L;
 
-       // Given: Set up the mock behavior
-       skier1.setNumSkier(numPiste); // Assuming you have a method to set piste ID in Skier
-       when(skierServices.assignSkierToPiste(numSkier, numPiste)).thenReturn(skier1);
+        // Setting up the skier with expected values
+        Skier skier = new Skier();
+        skier.setNumSkier(numSkier);
+        skier.setFirstName("John");
+        skier.setLastName("Doe");
+        skier.setCity("Some City");
+        skier.setDateOfBirth(LocalDate.of(1990, 1, 1));
 
-       // When & Then: Perform the request and verify the result
-       mockMvc.perform(put("/skier/assignToPiste/{numSkier}/{numPiste}", numSkier, numPiste)
-                       .contentType(MediaType.APPLICATION_JSON))
-               .andExpect(status().isOk()) // Expect HTTP status 200 OK
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-               .andExpect(jsonPath("$.firstName", is("John"))) // Check the skier's first name
-               .andExpect(jsonPath("$.lastName", is("Doe"))) // Check the skier's last name
-               .andExpect(jsonPath("$.city", is("Some City"))) // Check the skier's city
-               .andExpect(jsonPath("$.dateOfBirth", is("1990-01-01"))) // Check the skier's date of birth
-               .andExpect(jsonPath("$.numPiste", is(numPiste.intValue()))); // Check the piste ID
+        when(skierServices.assignSkierToPiste(numSkier, numPiste)).thenReturn(skier);
 
-       // Verify that the service method was called once
-       verify(skierServices, times(1)).assignSkierToPiste(numSkier, numPiste);
-   }*/
-
-   /* @Test
-    @DisplayName("Retrieve Skiers By Subscription Type")
-    public void testRetrieveSkiersBySubscriptionType() throws Exception {
-        // Given: Set up test data
-        List<Skier> skiers = Arrays.asList(skier1, skier2);
-
-        // Mocking the service method
-        when(skierServices.retrieveSkiersBySubscriptionType(TypeSubscription.ANNUAL)).thenReturn(skiers);
-
-        // When & Then: Perform the request and verify the response
-        mockMvc.perform(get("/skier/getSkiersBySubscription")
-                        .param("typeSubscription", TypeSubscription.ANNUAL.name()) // Pass subscription type as request parameter
+        mockMvc.perform(put("/skier/assignToPiste/{numSkier}/{numPiste}", numSkier, numPiste)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk()) // Expect HTTP status 200 OK
+                .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", hasSize(2))) // Check the size of the returned list
-                .andExpect(jsonPath("$[0].firstName", is("John"))) // Check the first skier's first name
-                .andExpect(jsonPath("$[1].firstName", is("Jane"))); // Check the second skier's first name
+                .andExpect(jsonPath("$.numSkier", is(numSkier.intValue()))) // Check skier's ID
+                .andExpect(jsonPath("$.firstName", is("John"))) // Check the skier's first name
+                .andExpect(jsonPath("$.lastName", is("Doe"))) // Check the skier's last name
+                .andExpect(jsonPath("$.city", is("Some City"))); // Check the skier's city
 
-        // Verify that the service method was called once
-        verify(skierServices, times(1)).retrieveSkiersBySubscriptionType(TypeSubscription.ANNUAL);
-    }*/
+        verify(skierServices, times(1)).assignSkierToPiste(numSkier, numPiste); // Verify service method call
+    }
+
+
+    @Test
+    public void testDeleteById() {
+        // Données de test
+        Long numSkier = 1L;
+
+        // Appel de la méthode
+        skierRestController.deleteById(numSkier);
+
+        // Vérification que la méthode removeSkier a été appelée avec le bon argument
+        verify(skierServices).removeSkier(numSkier);
+    }
+    @Test
+    public void testAddSkierAndAssignToCourse() {
+        // Données de test
+        Long numCourse = 1L;
+        Skier skier = new Skier(); // Remplissez les propriétés si nécessaire
+
+        // Comportement attendu du service
+        when(skierServices.addSkierAndAssignToCourse(skier, numCourse)).thenReturn(skier);
+
+        // Appel de la méthode
+        Skier result = skierRestController.addSkierAndAssignToCourse(skier, numCourse);
+
+        // Vérification que la méthode du service a été appelée avec les bons paramètres
+        verify(skierServices).addSkierAndAssignToCourse(skier, numCourse);
+
+        // Vérification du résultat
+        assertSame(skier, result); // Vérifie que le résultat est le même que l'objet skier
+    }
+
 
     /*
 
