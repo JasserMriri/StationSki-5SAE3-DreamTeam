@@ -1,14 +1,11 @@
-# Utilise une image de base contenant OpenJDK 17
+# Use OpenJDK 17 as the base image
 FROM openjdk:17-jdk-alpine
 
-# Crée un répertoire pour l'application dans le conteneur
+# Set the working directory in the container
 WORKDIR /app
 
-# Copie le fichier JAR généré par votre projet Spring Boot dans le conteneur
-COPY target/mon-projet-spring-boot.jar /app/mon-projet-spring-boot.jar
+# Copy the JAR file from the target directory into the container
+COPY target/gestion-station-ski-1.0.jar /app/mon-projet-spring-boot.jar
 
-# Expose le port sur lequel l'application Spring Boot s'exécute
-EXPOSE 8080
-
-# Définit la commande à exécuter lorsque le conteneur démarre
+# Set the command to run the JAR file
 ENTRYPOINT ["java", "-jar", "/app/mon-projet-spring-boot.jar"]
