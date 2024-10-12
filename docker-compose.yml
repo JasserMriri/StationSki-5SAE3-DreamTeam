@@ -1,0 +1,17 @@
+version: '3.8'  # Version de Docker Compose
+
+services:       # Définition des services
+  app:          # Nom du service
+    image: elayebhadir2024/stationski-app:v2.0  # Nom de l'image Docker
+    build:
+      context: .  # Contexte de construction, où se trouve le Dockerfile
+    ports:
+      - "8081:8080"  # Mapping des ports (hôte:conteneur)
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod  # Exemple de variable d'environnement
+    networks:
+      - app-network  # Réseau pour le conteneur
+
+networks:
+  app-network:  # Définition d'un réseau
+    driver: bridge  # Type de réseau (bridge est le type par défaut)
