@@ -6,17 +6,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import tn.esprit.spring.controllers.PisteRestController;
 import tn.esprit.spring.entities.Piste;
+import tn.esprit.spring.entities.Skier;
+import tn.esprit.spring.entities.SkierLevel;
 import tn.esprit.spring.services.IPisteServices;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -113,4 +118,91 @@ public class PisteControllerTest {
 
         verify(pisteService, times(1)).removePiste(pisteId);
     }
+    @Test
+    public void testRecommendPiste() {
+        // Arrange
+        Long skierId = 1L;
+        Skier skier = new Skier();
+        skier.setLevel(SkierLevel.INTERMEDIATE);
+
+        when(pisteService.findSkierById(skierId)).thenReturn(skier);
+        when(pisteService.recommendBestPisteForSkier(skier)).thenReturn("Piste recommandée : conditions idéales pour skier sur neige.");
+
+        // Act
+        ResponseEntity<String> response = pisteController.recommendPiste(skierId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Piste recommandée : conditions idéales pour skier sur neige.", response.getBody());
+    }
+
+    @Test
+    public void testRecommendPisteSkierNotFound() {
+        // Arrange
+        Long skierId = 2L;
+
+        when(pisteService.findSkierById(skierId)).thenReturn(null);
+
+        // Act
+        ResponseEntity<String> response = pisteController.recommendPiste(skierId);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Skier not found", response.getBody());
+    }
+    @Test
+    public void testRecommendBestPisteForBeginnerSkier() {
+        // Arrange
+        Long skierId = 1L;
+        Skier skier = new Skier();
+        skier.setLevel(SkierLevel.BEGINNER);
+
+        when(pisteService.findSkierById(skierId)).thenReturn(skier);
+        when(pisteService.recommendBestPisteForSkier(skier)).thenReturn("Piste verte recommandée pour les débutants");
+
+        // Act
+        ResponseEntity<String> response = pisteController.recommendPiste(skierId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Piste verte recommandée pour les débutants", response.getBody());
+    }
+
+    @Test
+    public void testRecommendBestPisteForExpertSkier() {
+        // Arrange
+        Long skierId = 1L;
+        Skier skier = new Skier();
+        skier.setLevel(SkierLevel.EXPERT);
+
+        when(pisteService.findSkierById(skierId)).thenReturn(skier);
+        when(pisteService.recommendBestPisteForSkier(skier)).thenReturn("Piste noire recommandée pour les experts");
+
+        // Act
+        ResponseEntity<String> response = pisteController.recommendPiste(skierId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Piste noire recommandée pour les experts", response.getBody());
+    }
+
+    @Test
+    public void testRecommendNoSpecialConditionsController() {
+        // Arrange
+        Long skierId = 1L;
+        Skier skier = new Skier();
+        skier.setLevel(SkierLevel.INTERMEDIATE);
+
+        // Stub des méthodes du service
+        when(pisteService.findSkierById(skierId)).thenReturn(skier);
+        when(pisteService.recommendBestPisteForSkier(skier)).thenReturn("Aucune recommandation pour le moment.");
+
+        // Act
+        ResponseEntity<String> response = pisteController.recommendPiste(skierId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Aucune recommandation pour le moment.", response.getBody());
+    }
+
 }

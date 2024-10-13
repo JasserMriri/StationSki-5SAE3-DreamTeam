@@ -3,8 +3,11 @@ package tn.esprit.spring.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.spring.entities.Piste;
+import tn.esprit.spring.entities.Skier;
 import tn.esprit.spring.services.IPisteServices;
 
 import java.util.List;
@@ -39,6 +42,21 @@ public class PisteRestController {
     public void deleteById(@PathVariable("id-piste") Long numPiste){
         pisteServices.removePiste(numPiste);
     }
-    
+
+    // Endpoint for recommending the best piste for a skier
+    @GetMapping("/recommend/{skierId}")
+    public ResponseEntity<String> recommendPiste(@PathVariable Long skierId) {
+        // Assuming there's a method to get a Skier by ID (skierService.getSkierById)
+        Skier skier = pisteServices.findSkierById(skierId);
+
+        if (skier == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Skier not found");
+        }
+
+        // Call the service method to get piste recommendation
+        String recommendation = pisteServices.recommendBestPisteForSkier(skier);
+        return ResponseEntity.ok(recommendation);
+    }
 
 }

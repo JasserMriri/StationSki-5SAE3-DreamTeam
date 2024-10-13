@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"tn.esprit.spring.entities"})
+@ComponentScan(basePackages = {"tn.esprit.spring.entities", "tn.esprit.spring.repositories", "tn.esprit.spring.services", "tn.esprit.spring.controllers"})
 
 @EnableScheduling
 public class GestionStationSkiApplication {

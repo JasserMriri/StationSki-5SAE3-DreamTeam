@@ -7,9 +7,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tn.esprit.spring.entities.Piste;
+import tn.esprit.spring.entities.Skier;
+import tn.esprit.spring.entities.SkierLevel;
+import tn.esprit.spring.entities.Weather;
 import tn.esprit.spring.repositories.IPisteRepository;
+import tn.esprit.spring.repositories.ISkierRepository;
+import tn.esprit.spring.repositories.IWeatherRepository;
 import tn.esprit.spring.services.PisteServicesImpl;
 
 
@@ -24,11 +30,45 @@ private IPisteRepository pisteRepository;
 
     @InjectMocks
     private PisteServicesImpl pisteService;
+    @Mock
+    private Skier skier;
+    @Mock
+    private IWeatherRepository weatherRepository;
 
+    @Mock
+    private ISkierRepository skierRepository;
+    @Mock
+    private Weather weather;
     @BeforeEach
     public void setup() {
         // Configuration préalable, si nécessaire
+        MockitoAnnotations.initMocks(this);
+
     }
+    @Test
+    public void testRecommendBestPisteForBeginnerSkier() {
+        // Arrange
+        when(skier.getLevel()).thenReturn(SkierLevel.BEGINNER);
+
+        // Act
+        String recommendation = pisteService.recommendBestPisteForSkier(skier);
+
+        // Assert
+        assertEquals("Piste verte recommandée pour les débutants", recommendation);
+    }
+
+    @Test
+    public void testRecommendBestPisteForExpertSkier() {
+        // Arrange
+        when(skier.getLevel()).thenReturn(SkierLevel.EXPERT);
+
+        // Act
+        String recommendation = pisteService.recommendBestPisteForSkier(skier);
+
+        // Assert
+        assertEquals("Piste noire recommandée pour les experts", recommendation);
+    }
+
 
     @Test
     public void testRetrieveAllPistes() {
@@ -101,6 +141,58 @@ private IPisteRepository pisteRepository;
 
         // Then
         assertEquals(piste, result);
+    }
+    @Test
+    public void testRecommendPisteForSnowyWeather() {
+        // Arrange
+        pisteService = spy(new PisteServicesImpl(weatherRepository, pisteRepository, skierRepository));  // Utiliser un spy ici
+        when(skier.getLevel()).thenReturn(SkierLevel.INTERMEDIATE);
+
+        // Stub de la méthode privée via le spy
+        doReturn(weather).when(pisteService).getCurrentWeather();  // Cela fonctionne car on utilise un spy
+        when(weather.isSnowy()).thenReturn(true);
+
+        // Act
+        String recommendation = pisteService.recommendBestPisteForSkier(skier);
+
+        // Assert
+        assertEquals("Piste recommandée : conditions idéales pour skier sur neige.", recommendation);
+    }
+
+
+    @Test
+    public void testRecommendPisteForWindyWeather() {
+        // Arrange
+        pisteService = spy(new PisteServicesImpl(weatherRepository, pisteRepository, skierRepository));  // Utiliser un spy ici
+        when(skier.getLevel()).thenReturn(SkierLevel.INTERMEDIATE);
+
+        // Stub de la méthode privée via le spy
+        doReturn(weather).when(pisteService).getCurrentWeather();  // Utiliser le spy pour la méthode privée
+        when(weather.isWindy()).thenReturn(true);  // Simuler la condition de vent fort
+
+        // Act
+        String recommendation = pisteService.recommendBestPisteForSkier(skier);
+
+        // Assert
+        assertEquals("Piste recommandée : éviter les pistes exposées au vent fort.", recommendation);
+    }
+
+    @Test
+    public void testRecommendNoSpecialConditions() {
+        // Arrange
+        pisteService = spy(new PisteServicesImpl(weatherRepository, pisteRepository, skierRepository));  // Utiliser un spy ici
+        when(skier.getLevel()).thenReturn(SkierLevel.INTERMEDIATE);
+
+        // Stub de la méthode privée via le spy
+        doReturn(weather).when(pisteService).getCurrentWeather();  // Utiliser le spy pour la méthode privée
+        when(weather.isSnowy()).thenReturn(false);
+        when(weather.isWindy()).thenReturn(false);
+
+        // Act
+        String recommendation = pisteService.recommendBestPisteForSkier(skier);
+
+        // Assert
+        assertEquals("Aucune recommandation pour le moment.", recommendation);
     }
 
     @Test

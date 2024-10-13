@@ -30,6 +30,7 @@ public class Skier implements Serializable {
 	String lastName;
 	LocalDate dateOfBirth;
 	String city;
+	private SkierLevel level;
 
 	@OneToOne(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
 	Subscription subscription;
