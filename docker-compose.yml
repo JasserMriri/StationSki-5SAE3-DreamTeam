@@ -6,9 +6,9 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  # Permettre la connexion sans mot de passe
-      MYSQL_DATABASE: stationSki
+      MYSQL_DATABASE: stationSki  # Nom de la base de données à créer
     ports:
-      - "3308:3306"  # Port local 3308 redirigé vers 3306 à l'intérieur du conteneur
+      - "3309:3306"  # Port local 3308 redirigé vers 3306 à l'intérieur du conteneur
     volumes:
       - db:/var/lib/mysql  # Persistance des données
 
@@ -23,7 +23,7 @@ services:
       SPRING_APPLICATION_JSON: '{
         "spring.datasource.url": "jdbc:mysql://mysqldb:3306/stationSki?createDatabaseIfNotExist=true",
         "spring.datasource.username": "root",
-        "spring.datasource.password": "",
+        "spring.datasource.password": "",  # Pas de mot de passe
         "spring.jpa.properties.hibernate.dialect": "org.hibernate.dialect.MySQL5InnoDBDialect",
         "spring.jpa.hibernate.ddl-auto": "update"
       }'
