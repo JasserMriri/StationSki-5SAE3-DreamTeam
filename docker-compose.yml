@@ -7,7 +7,7 @@ services:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"  # Permettre la connexion sans mot de passe
       MYSQL_DATABASE: stationSki  # Nom de la base de données à créer
     ports:
-    - "3310:3306" # Port local 3308 redirigé vers 3306 à l'intérieur du conteneur
+    - "3311:3306" # Port local 3308 redirigé vers 3306 à l'intérieur du conteneur
     volumes:
       - db:/var/lib/mysql  # Persistance des données
 
