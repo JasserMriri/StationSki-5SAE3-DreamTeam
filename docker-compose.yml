@@ -5,9 +5,9 @@ services:
     image: mysql:5.6
     restart: unless-stopped
     environment:
-      - MYSQL_ROOT_PASSWORD=223JFT5239
-      - MYSQL_DATABASE=stationSki  # Alignement avec la configuration Spring Boot
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      MYSQL_ROOT_PASSWORD: 201JFT1884
+      MYSQL_DATABASE: stationSki
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     ports:
       - "3308:3306"
     volumes:
@@ -16,15 +16,15 @@ services:
   app:
     depends_on:
       - mysqldb
-    image: ibtihel12345/stationski-app:v1.0  # Utilisation de l'image existante si nécessaire
+    image: ibtihel12345/stationski-app:v1.0
     restart: on-failure
     ports:
-      - "8089:8089"  # Alignement avec la configuration Spring Boot
+      - "8090:8089"
     environment:
       SPRING_APPLICATION_JSON: '{
         "spring.datasource.url": "jdbc:mysql://mysqldb:3306/stationSki?createDatabaseIfNotExist=true",
         "spring.datasource.username": "root",
-        "spring.datasource.password": "",
+        "spring.datasource.password": "201JFT1884",
         "spring.jpa.properties.hibernate.dialect": "org.hibernate.dialect.MySQL5InnoDBDialect",
         "spring.jpa.hibernate.ddl-auto": "update"
       }'
