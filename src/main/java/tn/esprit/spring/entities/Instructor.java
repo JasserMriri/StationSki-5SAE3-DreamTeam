@@ -2,6 +2,7 @@ package tn.esprit.spring.entities;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.Set;
 
 import javax.persistence.Entity;
@@ -31,4 +32,10 @@ public class Instructor implements Serializable {
 	LocalDate dateOfHire;
 	@OneToMany
 	Set<Course> courses;
+	public int getYearsOfService() {
+		if (dateOfHire == null) {
+			return 0;
+		}
+		return Period.between(dateOfHire, LocalDate.now()).getYears();
+	}
 }

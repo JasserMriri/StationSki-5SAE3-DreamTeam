@@ -17,5 +17,6 @@ public interface IInstructorServices {
     Instructor retrieveInstructor(Long numInstructor);
 
     Instructor addInstructorAndAssignToCourse(Instructor instructor, Long numCourse);
-
+    List<Instructor> getInstructorsSortedBySeniority(); // Liste des instructeurs classés par ancienneté
+    int getYearsOfService(Long numInstructor); // Calcul des années de service d'un instructeur
 }

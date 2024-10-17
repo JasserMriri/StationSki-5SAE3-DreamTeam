@@ -7,9 +7,11 @@ import tn.esprit.spring.entities.Instructor;
 import tn.esprit.spring.repositories.ICourseRepository;
 import tn.esprit.spring.repositories.IInstructorRepository;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -45,6 +47,22 @@ public class InstructorServicesImpl implements IInstructorServices{
         courseSet.add(course);
         instructor.setCourses(courseSet);
         return instructorRepository.save(instructor);
+    }
+
+    @Override
+    public int getYearsOfService(Long numInstructor) {
+        Instructor instructor = instructorRepository.findById(numInstructor).orElse(null);
+        if (instructor == null) {
+            return 0; // Si l'instructeur n'est pas trouvé
+        }
+        return instructor.getYearsOfService();
+    }
+
+    @Override
+    public List<Instructor> getInstructorsSortedBySeniority() {
+        return instructorRepository.findAll().stream()
+                .sorted(Comparator.comparing(Instructor::getYearsOfService).reversed()) // Trier par ancienneté
+                .collect(Collectors.toList());
     }
 
 

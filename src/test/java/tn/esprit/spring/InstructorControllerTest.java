@@ -8,6 +8,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import tn.esprit.spring.controllers.InstructorRestController;
 import tn.esprit.spring.entities.Instructor;
 import tn.esprit.spring.services.IInstructorServices;
@@ -108,5 +110,17 @@ public class InstructorControllerTest {
                 .andExpect(content().json("{\"numInstructor\":1,\"firstName\":\"John\",\"lastName\":\"Doe\"}"));
 
         verify(instructorServices, times(1)).addInstructorAndAssignToCourse(any(Instructor.class), eq(1L));
+    }
+    @Test
+    @GetMapping("/yearsOfService/{id}")
+    public ResponseEntity<Integer> getYearsOfService(@PathVariable Long id) {
+        int yearsOfService = instructorServices.getYearsOfService(id);
+        return ResponseEntity.ok(yearsOfService);
+    }
+    @Test
+    @GetMapping("/sortedBySeniority")
+    public ResponseEntity<List<Instructor>> getInstructorsSortedBySeniority() {
+        List<Instructor> sortedInstructors = instructorServices.getInstructorsSortedBySeniority();
+        return ResponseEntity.ok(sortedInstructors);
     }
 }

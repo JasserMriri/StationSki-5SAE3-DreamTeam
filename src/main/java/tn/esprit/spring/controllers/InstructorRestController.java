@@ -52,4 +52,13 @@ public class InstructorRestController {
         Instructor instructor = instructorServices.addInstructorAndAssignToCourse(instructorServices.retrieveInstructor(instructorId), courseId);
         return ResponseEntity.ok(instructor);
     }
+    @GetMapping("/sortedBySeniority")
+    public List<Instructor> getInstructorsSortedBySeniority() {
+        return instructorServices.getInstructorsSortedBySeniority();
+    }
+
+    @GetMapping("/{numInstructor}/yearsOfService")
+    public int getYearsOfService(@PathVariable Long numInstructor) {
+        return instructorServices.getYearsOfService(numInstructor);
+    }
 }

@@ -12,6 +12,8 @@ import tn.esprit.spring.repositories.ICourseRepository;
 import tn.esprit.spring.repositories.IInstructorRepository;
 import tn.esprit.spring.services.InstructorServicesImpl;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -110,4 +112,42 @@ class InstructorServicesImplTest {
         verify(courseRepository, times(1)).findById(1L);
         verify(instructorRepository, times(1)).save(instructor);
     }
+    @Test
+    void testGetYearsOfService() {
+        Instructor instructor = new Instructor();
+        // Utilisation d'une date dynamique pour l'embauche, ici on soustrait 5 ans à la date actuelle
+        LocalDate dateOfHire = LocalDate.now().minusYears(5);
+        instructor.setDateOfHire(dateOfHire);
+        when(instructorRepository.findById(1L)).thenReturn(Optional.of(instructor));
+
+        int expectedYearsOfService = Period.between(dateOfHire, LocalDate.now()).getYears();
+        int actualYearsOfService = instructorServices.getYearsOfService(1L);
+
+        // Vérification dynamique en fonction du calcul attendu
+        assertEquals(expectedYearsOfService, actualYearsOfService);
+    }
+    @Test
+    void testGetInstructorsSortedBySeniority() {
+        // Créer plusieurs instructeurs avec différentes dates d'embauche
+        Instructor instructor1 = new Instructor();
+        instructor1.setDateOfHire(LocalDate.now().minusYears(10)); // Il y a 10 ans
+
+        Instructor instructor2 = new Instructor();
+        instructor2.setDateOfHire(LocalDate.now().minusYears(5)); // Il y a 5 ans
+
+        Instructor instructor3 = new Instructor();
+        instructor3.setDateOfHire(LocalDate.now().minusYears(1)); // Il y a 1 an
+
+        List<Instructor> instructors = Arrays.asList(instructor2, instructor3, instructor1);
+        when(instructorRepository.findAll()).thenReturn(instructors);
+
+        // Appeler la méthode de tri
+        List<Instructor> sortedInstructors = instructorServices.getInstructorsSortedBySeniority();
+
+        // Vérifier que les instructeurs sont triés du plus ancien au plus récent
+        assertEquals(instructor1, sortedInstructors.get(0));
+        assertEquals(instructor2, sortedInstructors.get(1));
+        assertEquals(instructor3, sortedInstructors.get(2));
+    }
+
 }
