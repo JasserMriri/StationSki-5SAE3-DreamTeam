@@ -222,8 +222,77 @@ public class SkierServiceImplTest {
         verify(skierRepository).findBySubscription_TypeSub(subscriptionType);
     }
 
+    @Test
+    public void testAssignSkierToPiste() {
+        // Given
+        Long numSkier = 1L;
+        Long numPiste = 1L;
+
+        // Mocking the Skier
+        Skier skier = new Skier();
+        skier.setNumSkier(numSkier);
+        skier.setFirstName("John");
+        skier.setLastName("Doe");
+        skier.setPistes(new HashSet<>()); // Initialiser les pistes
+
+        // Mocking the Piste
+        Piste piste = new Piste();
+        piste.setNumPiste(numPiste);
+        piste.setNamePiste("Piste 1");
+
+        // Mock the repository calls
+        when(skierRepository.findById(numSkier)).thenReturn(Optional.of(skier));
+        when(pisteRepository.findById(numPiste)).thenReturn(Optional.of(piste));
+        when(skierRepository.save(any(Skier.class))).thenReturn(skier);
+
+        // When
+        Skier result = skierServices.assignSkierToPiste(numSkier, numPiste);
+
+        // Then
+        assertNotNull(result); // Verify that the result is not null
+        assertTrue(result.getPistes().contains(piste)); // Verify that the skier is assigned to the piste
+        verify(skierRepository).findById(numSkier); // Verify the repository call for the skier
+        verify(pisteRepository).findById(numPiste); // Verify the repository call for the piste
+        verify(skierRepository).save(skier); // Verify that the skier is saved with the new piste
+    }
 
 
+    @Test
+    public void testRetrieveSkier() {
+        // Given
+        Long numSkier = 1L;
+        Skier skier = new Skier();
+        skier.setNumSkier(numSkier);
+        skier.setFirstName("John");
+        skier.setLastName("Doe");
+
+        // Mock the repository call
+        when(skierRepository.findById(numSkier)).thenReturn(Optional.of(skier));
+
+        // When
+        Skier result = skierServices.retrieveSkier(numSkier);
+
+        // Then
+        assertNotNull(result); // Verify that the result is not null
+        assertEquals(skier, result); // Verify that the returned skier matches the mock skier
+        verify(skierRepository, times(1)).findById(numSkier); // Verify the repository call
+    }
+
+    @Test
+    public void testRetrieveSkierNotFound() {
+        // Given
+        Long numSkier = 1L;
+
+        // Mock the repository call to return an empty Optional
+        when(skierRepository.findById(numSkier)).thenReturn(Optional.empty());
+
+        // When
+        Skier result = skierServices.retrieveSkier(numSkier);
+
+        // Then
+        assertNull(result); // Verify that the result is null when no skier is found
+        verify(skierRepository, times(1)).findById(numSkier); // Verify the repository call
+    }
 
 
 }

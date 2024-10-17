@@ -6,6 +6,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertSame;
 
 import java.time.LocalDate;
+import tn.esprit.spring.entities.Skier;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -221,65 +223,37 @@ public class SkierControllerTest {
         // Vérification du résultat
         assertSame(skier, result); // Vérifie que le résultat est le même que l'objet skier
     }
-
-
-    /*
-
-    @Test
-    @DisplayName("Test Delete Skier by Id")
-    public void testDeleteSkierById() throws Exception {
-        // Given
-        Long skierId = 1L;
-
-        // When & Then
-        mockMvc.perform(delete("/delete/{id-skier}", skierId))
-                .andExpect(status().isNoContent()); // 204 No Content expected since no body is returned
-
-        // Verify that the service method was called once with the correct parameter
-        verify(skierServices, times(1)).removeSkier(skierId);
-    }*/
-
-   /* @Test
-    @DisplayName("Add Skier and Assign to Course")
-    public void testAddSkierAndAssignToCourse() throws Exception {
-        Long numCourse = 1L; // Example course ID to assign
-
-        // Given
-        when(skierServices.addSkierAndAssignToCourse(any(Skier.class), eq(numCourse))).thenReturn(skier1);
-
-        // When & Then
-        mockMvc.perform(post("/skier/addAndAssign/{numCourse}", numCourse)
-                        .contentType(APPLICATION_JSON)
-                        .content("{\"firstName\":\"John\", \"lastName\":\"Doe\", \"city\":\"Some City\", \"dateOfBirth\":\"1990-01-01\"}"))
-                .andExpect(status().isOk()) // Expect HTTP 200 OK
-                .andExpect(content().contentType(APPLICATION_JSON))
-                .andExpect(jsonPath("$.firstName", is("John"))) // Check skier's first name
-                .andExpect(jsonPath("$.lastName", is("Doe"))) // Check skier's last name
-                .andExpect(jsonPath("$.city", is("Some City"))) // Check skier's city
-                .andExpect(jsonPath("$.dateOfBirth", is("1990-01-01"))); // Check skier's date of birth
-
-        verify(skierServices, times(1)).addSkierAndAssignToCourse(any(Skier.class), eq(numCourse)); // Verify service method was called once
-    }*/
    /* @Test
     @DisplayName("Add Skier")
     public void testAddSkier() throws Exception {
-        // Given
-        when(skierServices.addSkier(any(Skier.class))).thenReturn(skier1);
+        // Given: Create a Skier object to be added
+        Skier newSkier = new Skier();
+        newSkier.setNumSkier(3L);
+        newSkier.setFirstName("Alice");
+        newSkier.setLastName("Wonderland");
+        newSkier.setDateOfBirth(LocalDate.of(1995, 5, 15));
+        newSkier.setCity("Fantasy City");
 
-        // When & Then
+        // When: Mock the service behavior to return the added skier
+        when(skierServices.addSkier(any(Skier.class))).thenReturn(newSkier);
+
+        // When & Then: Perform the POST request and verify the result
         mockMvc.perform(post("/skier/add")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\":\"John\", \"lastName\":\"Doe\", \"city\":\"Some City\", \"dateOfBirth\":\"1990-01-01\"}"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.firstName", is("John")))
-                .andExpect(jsonPath("$.lastName", is("Doe")))
-                .andExpect(jsonPath("$.city", is("Some City")))
-                .andExpect(jsonPath("$.dateOfBirth", is("1990-01-01"))) // Check date of birth
-                .andExpect(jsonPath("$.numSkier", is(1))); // Check numSkier if applicable
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"firstName\":\"Alice\",\"lastName\":\"Wonderland\",\"dateOfBirth\":\"1995-05-15\",\"city\":\"Fantasy City\"}"))
+                .andExpect(status().isOk()) // Expect HTTP status 200 OK
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON)) // Check content type
+                .andExpect(jsonPath("$.firstName", is("Alice"))) // Check the first name
+                .andExpect(jsonPath("$.lastName", is("Wonderland"))) // Check the last name
+                .andExpect(jsonPath("$.city", is("Fantasy City"))); // Check the city
 
+        // Verify that the addSkier method was called once with the correct parameter
         verify(skierServices, times(1)).addSkier(any(Skier.class));
     }*/
+
+
+
+
 
 
 }

@@ -22,7 +22,7 @@ public class SkierRestController {
     @PostMapping("/add")
     public Skier addSkier(@RequestBody Skier skier){
         return  skierServices.addSkier(skier);
-    }//no
+    } //no
 
     @Operation(description = "Add Skier And Assign To Course")
     @PostMapping("/addAndAssign/{numCourse}")
@@ -65,5 +65,14 @@ public class SkierRestController {
     public List<Skier> getAllSkiers(){
         return skierServices.retrieveAllSkiers();
     }//ok
+
+    @Operation(description = "Update skier performance")
+    @PutMapping("/updatePerformance/{numSkier}/{numPiste}")
+    public Skier updateSkierPerformance(
+            @PathVariable("numSkier") Long numSkier,
+            @PathVariable("numPiste") Long numPiste,
+            @RequestParam("timeSpent") double timeSpent) {
+        return skierServices.updateSkierPerformance(numSkier, numPiste, timeSpent);
+    }
 
 }

@@ -69,7 +69,7 @@ public class SkierServicesImpl implements ISkierServices {
     @Override
     public void removeSkier(Long numSkier) {
         skierRepository.deleteById(numSkier);
-    }
+    }//donne moi cette fct au controleur
 
     @Override
     public Skier retrieveSkier(Long numSkier) {
@@ -89,10 +89,47 @@ public class SkierServicesImpl implements ISkierServices {
         }
 
         return skierRepository.save(skier);
-    }//hedhi mazlt
+    }//oui
 
     @Override
     public List<Skier> retrieveSkiersBySubscriptionType(TypeSubscription typeSubscription) {
         return skierRepository.findBySubscription_TypeSub(typeSubscription);
     }
+
+
+    @Override
+    public Skier updateSkierPerformance(Long numSkier, Long numPiste, double timeSpent) {
+        Skier skier = skierRepository.findById(numSkier).orElse(null);
+        Piste piste = pisteRepository.findById(numPiste).orElse(null);
+
+        if (skier == null || piste == null) {
+            throw new RuntimeException("Skier or Piste not found");
+        }
+
+        // Mise à jour de la distance totale parcourue
+        double newDistance = skier.getTotalDistance() + piste.getLength(); // longueur de la piste en km
+        skier.setTotalDistance(newDistance);
+
+        // Mise à jour du temps total de ski
+        double newTotalTime = skier.getTotalTime() + timeSpent; // temps passé sur cette piste en heures
+        skier.setTotalTime(newTotalTime);
+
+        // Mise à jour du niveau en fonction de la distance parcourue (exemple arbitraire)
+        if (newDistance > 100) {
+            skier.setLevel(5);  // Niveau expert
+        } else if (newDistance > 50) {
+            skier.setLevel(4);  // Niveau avancé
+        } else if (newDistance > 20) {
+            skier.setLevel(3);  // Niveau intermédiaire
+        } else if (newDistance > 10) {
+            skier.setLevel(2);  // Niveau débutant
+        } else {
+            skier.setLevel(1);  // Niveau novice
+        }
+
+        return skierRepository.save(skier);
+    }
+
+
+
 }

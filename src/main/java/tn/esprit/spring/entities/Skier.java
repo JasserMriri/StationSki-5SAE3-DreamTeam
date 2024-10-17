@@ -30,6 +30,10 @@ public class Skier implements Serializable {
 	String lastName;
 	LocalDate dateOfBirth;
 	String city;
+	// Nouveaux attributs pour le suivi de performance
+	private double totalDistance; // en kilomètres
+	private double totalTime;     // en heures
+	private int level;            // Niveau du skieur
 
 	@OneToOne(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
 	Subscription subscription;
@@ -46,6 +50,31 @@ public class Skier implements Serializable {
 	@OneToMany(mappedBy = "skier")
 	Set<Registration> registrations;
 
+
+	// Getters et Setters pour les nouveaux attributs
+	public double getTotalDistance() {
+		return totalDistance;
+	}
+
+	public void setTotalDistance(double totalDistance) {
+		this.totalDistance = totalDistance;
+	}
+
+	public double getTotalTime() {
+		return totalTime;
+	}
+
+	public void setTotalTime(double totalTime) {
+		this.totalTime = totalTime;
+	}
+
+	public int getLevel() {
+		return level;
+	}
+
+	public void setLevel(int level) {
+		this.level = level;
+	}
 
 
 

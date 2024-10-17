@@ -10,6 +10,7 @@ public interface ISkierServices {
 	List<Skier> retrieveAllSkiers();
 
 	Skier  addSkier(Skier  skier);
+	Skier updateSkierPerformance(Long numSkier, Long numPiste, double timeSpent);
 
 	Skier assignSkierToSubscription(Long numSkier, Long numSubscription);
 
