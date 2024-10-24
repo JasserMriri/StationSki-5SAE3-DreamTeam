@@ -124,7 +124,6 @@ private IPisteRepository pisteRepository;
         // Then
         verify(pisteRepository, times(1)).deleteById(pisteId);
     }
-
     @Test
     public void testUpdatePiste() {
         // Given
@@ -142,6 +141,7 @@ private IPisteRepository pisteRepository;
         // Then
         assertEquals(piste, result);
     }
+
     @Test
     public void testRecommendPisteForSnowyWeather() {
         // Arrange
@@ -159,21 +159,13 @@ private IPisteRepository pisteRepository;
         assertEquals("Piste recommandée : conditions idéales pour skier sur neige.", recommendation);
     }
 
-
     @Test
     public void testRecommendPisteForWindyWeather() {
-        // Arrange
         pisteService = spy(new PisteServicesImpl(weatherRepository, pisteRepository, skierRepository));  // Utiliser un spy ici
         when(skier.getLevel()).thenReturn(SkierLevel.INTERMEDIATE);
-
-        // Stub de la méthode privée via le spy
         doReturn(weather).when(pisteService).getCurrentWeather();  // Utiliser le spy pour la méthode privée
         when(weather.isWindy()).thenReturn(true);  // Simuler la condition de vent fort
-
-        // Act
         String recommendation = pisteService.recommendBestPisteForSkier(skier);
-
-        // Assert
         assertEquals("Piste recommandée : éviter les pistes exposées au vent fort.", recommendation);
     }
 

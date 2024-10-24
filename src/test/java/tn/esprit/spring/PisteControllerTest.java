@@ -167,39 +167,31 @@ public class PisteControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Piste verte recommandée pour les débutants", response.getBody());
     }
-
     @Test
     public void testRecommendBestPisteForExpertSkier() {
         // Arrange
         Long skierId = 1L;
         Skier skier = new Skier();
         skier.setLevel(SkierLevel.EXPERT);
-
         when(pisteService.findSkierById(skierId)).thenReturn(skier);
         when(pisteService.recommendBestPisteForSkier(skier)).thenReturn("Piste noire recommandée pour les experts");
-
         // Act
         ResponseEntity<String> response = pisteController.recommendPiste(skierId);
-
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Piste noire recommandée pour les experts", response.getBody());
     }
-
     @Test
     public void testRecommendNoSpecialConditionsController() {
         // Arrange
         Long skierId = 1L;
         Skier skier = new Skier();
         skier.setLevel(SkierLevel.INTERMEDIATE);
-
         // Stub des méthodes du service
         when(pisteService.findSkierById(skierId)).thenReturn(skier);
         when(pisteService.recommendBestPisteForSkier(skier)).thenReturn("Aucune recommandation pour le moment.");
-
         // Act
         ResponseEntity<String> response = pisteController.recommendPiste(skierId);
-
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Aucune recommandation pour le moment.", response.getBody());
