@@ -9,9 +9,26 @@ services:       # Définition des services
       - "8081:8080"  # Mapping des ports (hôte:conteneur)
     environment:
       - SPRING_PROFILES_ACTIVE=prod  # Exemple de variable d'environnement
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/mydatabase  # URL de connexion à la base de données
+      - SPRING_DATASOURCE_USERNAME=root  # Nom d'utilisateur de la base de données
+      - SPRING_DATASOURCE_PASSWORD=mysecretpassword  # Mot de passe de la base de données
+    networks:
+      - app-network  # Réseau pour le conteneur
+
+  db:  # Service pour la base de données
+    image: mysql:5.7  # Utilisation de l'image MySQL
+    restart: always  # Redémarrer le conteneur si besoin
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysecretpassword  # Mot de passe root pour MySQL
+      - MYSQL_DATABASE=mydatabase  # Base de données par défaut à créer
+    volumes:
+      - db-data:/var/lib/mysql  # Volume pour la persistance des données
     networks:
       - app-network  # Réseau pour le conteneur
 
 networks:
   app-network:  # Définition d'un réseau
     driver: bridge  # Type de réseau (bridge est le type par défaut)
+
+volumes:
+  db-data:  # Volume pour persister les données de la base de données

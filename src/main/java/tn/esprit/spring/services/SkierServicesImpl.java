@@ -23,7 +23,6 @@ public class SkierServicesImpl implements ISkierServices {
 
     private ISubscriptionRepository subscriptionRepository;
 
-
     @Override
     public List<Skier> retrieveAllSkiers() {
         return skierRepository.findAll();
@@ -41,6 +40,8 @@ public class SkierServicesImpl implements ISkierServices {
             case MONTHLY:
                 skier.getSubscription().setEndDate(skier.getSubscription().getStartDate().plusMonths(1));
                 break;
+            default:
+                throw new IllegalArgumentException("Unknown subscription type");
         }
         return skierRepository.save(skier);
     }
@@ -49,6 +50,9 @@ public class SkierServicesImpl implements ISkierServices {
     public Skier assignSkierToSubscription(Long numSkier, Long numSubscription) {
         Skier skier = skierRepository.findById(numSkier).orElse(null);
         Subscription subscription = subscriptionRepository.findById(numSubscription).orElse(null);
+        if (skier == null || subscription == null) {
+            throw new RuntimeException("Skier or Subscription not found");
+        }
         skier.setSubscription(subscription);
         return skierRepository.save(skier);
     }
@@ -69,17 +73,20 @@ public class SkierServicesImpl implements ISkierServices {
     @Override
     public void removeSkier(Long numSkier) {
         skierRepository.deleteById(numSkier);
-    }//donne moi cette fct au controleur
+    }
 
     @Override
     public Skier retrieveSkier(Long numSkier) {
         return skierRepository.findById(numSkier).orElse(null);
-    }//hedhi mazlt
+    }
 
     @Override
     public Skier assignSkierToPiste(Long numSkieur, Long numPiste) {
         Skier skier = skierRepository.findById(numSkieur).orElse(null);
         Piste piste = pisteRepository.findById(numPiste).orElse(null);
+        if (skier == null || piste == null) {
+            throw new RuntimeException("Skier or Piste not found");
+        }
         try {
             skier.getPistes().add(piste);
         } catch (NullPointerException exception) {
@@ -89,13 +96,12 @@ public class SkierServicesImpl implements ISkierServices {
         }
 
         return skierRepository.save(skier);
-    }//oui
+    }
 
     @Override
     public List<Skier> retrieveSkiersBySubscriptionType(TypeSubscription typeSubscription) {
         return skierRepository.findBySubscription_TypeSub(typeSubscription);
     }
-
 
     @Override
     public Skier updateSkierPerformance(Long numSkier, Long numPiste, double timeSpent) {
@@ -107,11 +113,11 @@ public class SkierServicesImpl implements ISkierServices {
         }
 
         // Mise à jour de la distance totale parcourue
-        double newDistance = skier.getTotalDistance() + piste.getLength(); // longueur de la piste en km
+        double newDistance = skier.getTotalDistance() + piste.getLength();
         skier.setTotalDistance(newDistance);
 
         // Mise à jour du temps total de ski
-        double newTotalTime = skier.getTotalTime() + timeSpent; // temps passé sur cette piste en heures
+        double newTotalTime = skier.getTotalTime() + timeSpent;
         skier.setTotalTime(newTotalTime);
 
         // Mise à jour du niveau en fonction de la distance parcourue (exemple arbitraire)
@@ -129,7 +135,4 @@ public class SkierServicesImpl implements ISkierServices {
 
         return skierRepository.save(skier);
     }
-
-
-
 }
